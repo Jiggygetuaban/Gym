@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { Href, router } from "expo-router";
 import React, { useMemo } from "react";
 import {
-  FlatList,
+  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SessionCard, StatCard } from "@/components";
+import { useAuth } from "@/context/AuthContext";
 import { useStorage } from "@/context/StorageContext";
 import { useWorkout } from "@/context/WorkoutContext";
 import { useColors } from "@/hooks/useColors";
@@ -61,6 +62,7 @@ function getStreak(sessions: { startedAt: number }[]) {
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const { sessions } = useStorage();
   const { activeWorkout, elapsedSeconds, startWorkout } = useWorkout();
 
@@ -94,26 +96,53 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
-              {getGreeting()}
-            </Text>
+          <View style={styles.headerText}>
+            <View style={styles.greetingRow}>
+              <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
+                {getGreeting()}
+              </Text>
+              {user?.name ? (
+                <Text
+                  style={[styles.greetingName, { color: colors.foreground }]}
+                  numberOfLines={1}
+                >
+                  {user.name}
+                </Text>
+              ) : null}
+            </View>
             <Text style={[styles.title, { color: colors.foreground }]}>
               Let&apos;s train
             </Text>
           </View>
-          <View
+          <TouchableOpacity
+            onPress={() => router.push("/profile" as Href)}
+            activeOpacity={0.8}
+            hitSlop={12}
             style={[
-              styles.avatarWrap,
-              { backgroundColor: colors.primary, borderRadius: 20 },
+              styles.avatarButton,
+              { borderRadius: 28 },
             ]}
           >
-            <Ionicons
-              name="person"
-              size={20}
-              color={colors.primaryForeground}
-            />
-          </View>
+            <View
+              style={[
+                styles.avatarWrap,
+                { backgroundColor: colors.primary, borderRadius: 20 },
+              ]}
+            >
+              {user?.profile_photo_url ? (
+                <Image
+                  source={{ uri: user.profile_photo_url }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <Ionicons
+                  name="person"
+                  size={20}
+                  color={colors.primaryForeground}
+                />
+              )}
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Active workout banner */}
@@ -205,7 +234,11 @@ export default function HomeScreen() {
           ) : (
             <View style={styles.sessionList}>
               {recentSessions.map((s) => (
-                <SessionCard key={s.id} session={s} />
+                <SessionCard
+                  key={s.id}
+                  session={s}
+                  onPress={() => router.push(`/session/${s.id}` as Href)}
+                />
               ))}
             </View>
           )}
@@ -222,23 +255,47 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 16,
+  },
+  headerText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  greetingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 2,
   },
   greeting: {
     fontSize: 14,
     fontFamily: "Inter_400Regular",
-    marginBottom: 2,
+  },
+  greetingName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
   },
+  avatarButton: {
+    width: 56,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   avatarWrap: {
     width: 40,
     height: 40,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
+  avatarImage: { width: 40, height: 40 },
   activeBanner: {
     flexDirection: "row",
     alignItems: "center",

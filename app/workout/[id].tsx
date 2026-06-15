@@ -49,7 +49,10 @@ export default function WorkoutDetailScreen() {
     const exercises: ActiveExercise[] = template!.exercises.map((ex) => ({
       id: genId(),
       exercise: ex.exercise,
-      sets: [{ reps: "10", weight: "0", completed: false }],
+      sets:
+        ex.sets.length > 0
+          ? ex.sets.map((set) => ({ ...set, completed: false }))
+          : [{ reps: "10", weight: "0", completed: false }],
     }));
     startWorkout(template!.name, template!.id, exercises);
     router.push("/workout/active");

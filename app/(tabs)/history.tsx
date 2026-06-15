@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Href, router } from "expo-router";
 import React, { useMemo } from "react";
 import {
   Alert,
@@ -121,6 +122,7 @@ export default function HistoryScreen() {
           renderItem={({ item }) => (
             <SessionCard
               session={item}
+              onPress={() => router.push(`/session/${item.id}` as Href)}
               onDelete={() => handleDelete(item.id, item.name)}
             />
           )}
