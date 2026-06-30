@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\PasswordResetCodeMail;
 use App\Models\ApiToken;
 use App\Models\User;
+use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,8 +25,13 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
         ]);
+        $data['role'] = User::ROLE_MEMBER;
 
         $user = User::create($data);
+
+        ActivityLogger::log($request, 'auth.registered', 'Account created', [
+            'email' => $user->email,
+        ], $user);
 
         return $this->tokenResponse($user, 'Account created', 201);
     }
@@ -44,6 +50,8 @@ class AuthController extends Controller
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
+
+        ActivityLogger::log($request, 'auth.signed_in', 'Signed in', [], $user);
 
         return $this->tokenResponse($user, 'Signed in');
     }
@@ -68,6 +76,10 @@ class AuthController extends Controller
             );
 
             Mail::to($user->email)->send(new PasswordResetCodeMail($code));
+
+            ActivityLogger::log($request, 'auth.password_reset_requested', 'Password reset code requested', [
+                'email' => $user->email,
+            ], $user);
         }
 
         return response()->json([
@@ -114,6 +126,8 @@ class AuthController extends Controller
 
         $user->apiTokens()->delete();
 
+        ActivityLogger::log($request, 'auth.password_reset', 'Password reset completed', [], $user);
+
         return response()->json([
             'message' => 'Password reset successfully. Please sign in.',
         ]);
@@ -131,6 +145,8 @@ class AuthController extends Controller
         if ($tokenId) {
             ApiToken::whereKey($tokenId)->delete();
         }
+
+        ActivityLogger::log($request, 'auth.signed_out', 'Signed out');
 
         return response()->json(['message' => 'Signed out']);
     }
@@ -165,6 +181,8 @@ class AuthController extends Controller
         $user->email = $data['email'];
         $user->save();
 
+        ActivityLogger::log($request, 'profile.updated', 'Profile updated');
+
         return response()->json([
             'message' => 'Profile updated',
             'user' => $user->fresh(),
@@ -184,6 +202,8 @@ class AuthController extends Controller
         $user->profile_photo_url = $request->getSchemeAndHttpHost().'/storage/'.$path;
         $user->save();
 
+        ActivityLogger::log($request, 'profile.photo_uploaded', 'Profile photo uploaded');
+
         return response()->json([
             'message' => 'Profile photo updated',
             'user' => $user->fresh(),
@@ -196,6 +216,8 @@ class AuthController extends Controller
         $this->deleteStoredProfilePhoto($user->profile_photo_url);
         $user->profile_photo_url = null;
         $user->save();
+
+        ActivityLogger::log($request, 'profile.photo_removed', 'Profile photo removed');
 
         return response()->json([
             'message' => 'Profile photo removed',

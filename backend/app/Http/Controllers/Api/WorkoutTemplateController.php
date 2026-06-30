@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -36,15 +37,26 @@ class WorkoutTemplateController extends Controller
             ],
         );
 
+        ActivityLogger::log($request, 'workout_template.saved', 'Workout template saved', [
+            'template_id' => $data['id'],
+            'name' => $data['name'],
+        ]);
+
         return response()->json(['template' => $template], 201);
     }
 
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $request->user()
+        $deleted = $request->user()
             ->workoutTemplates()
             ->where('client_id', $id)
             ->delete();
+
+        if ($deleted > 0) {
+            ActivityLogger::log($request, 'workout_template.deleted', 'Workout template deleted', [
+                'template_id' => $id,
+            ]);
+        }
 
         return response()->json(['message' => 'Template deleted']);
     }

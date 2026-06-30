@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Support\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -44,15 +45,28 @@ class WorkoutSessionController extends Controller
             ],
         );
 
+        ActivityLogger::log($request, 'workout_session.saved', 'Workout session saved', [
+            'session_id' => $data['id'],
+            'name' => $data['name'],
+            'duration' => $data['duration'],
+            'total_volume' => $data['totalVolume'],
+        ]);
+
         return response()->json(['session' => $session], 201);
     }
 
     public function destroy(Request $request, string $id): JsonResponse
     {
-        $request->user()
+        $deleted = $request->user()
             ->workoutSessions()
             ->where('client_id', $id)
             ->delete();
+
+        if ($deleted > 0) {
+            ActivityLogger::log($request, 'workout_session.deleted', 'Workout session deleted', [
+                'session_id' => $id,
+            ]);
+        }
 
         return response()->json(['message' => 'Session deleted']);
     }

@@ -26,7 +26,7 @@ For Android emulator testing, install **Android Studio**.
 Option A: Clone from Git:
 
 ```bash
-git clone YOUR_REPOSITORY_URL Gym
+git clone https://github.com/Jiggygetuaban/Gym.git
 cd Gym
 ```
 
@@ -192,6 +192,13 @@ After running `php artisan migrate --seed`, you can log in with:
 
 ```text
 Email: demo@gym.test
+Password: password
+```
+
+Admin account:
+
+```text
+Email: admin@gym.test
 Password: password
 ```
 

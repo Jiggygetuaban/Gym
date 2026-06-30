@@ -22,9 +22,13 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'role',
         'profile_photo_url',
         'password',
     ];
+
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_MEMBER = 'member';
 
     /**
      * The attributes that should be hidden for serialization.
@@ -62,5 +66,15 @@ class User extends Authenticatable
     public function workoutSessions(): HasMany
     {
         return $this->hasMany(WorkoutSession::class);
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
     }
 }

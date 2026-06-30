@@ -16,10 +16,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        User::updateOrCreate(
+            ['email' => 'admin@gym.test'],
+            [
+                'name' => 'Admin User',
+                'role' => User::ROLE_ADMIN,
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ],
+        );
+
         $user = User::updateOrCreate(
             ['email' => 'demo@gym.test'],
             [
                 'name' => 'Demo User',
+                'role' => User::ROLE_MEMBER,
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ],
